@@ -22,10 +22,11 @@ require 'request.rb'
 class Foohttp
   module EvMaDesc 
     def post_init
-      puts "Recived connection"
+    #  puts "Recived connection"
     end
     def receive_data request
       HandleHTTP(request)
+      #close_connection
     end
   end
 

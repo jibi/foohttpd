@@ -18,5 +18,5 @@
 
 require "foohttp.rb"
 
-webserver = new foohttp("localhost",8022)
+webserver = Foohttp.new("localhost",80)
  

@@ -17,7 +17,7 @@
 #
 #
 
-WEBROOT="lolwebroot"
+WEBROOT="/home/blawl/doc/project/foohttpd/htdocs"
 
 def SendString(str)
   len = str.length
@@ -25,10 +25,9 @@ def SendString(str)
 end
 
 def HandleHTTP(request)
-  request_lines = request.split("\r\n")
-  method  = request_lines[0].split( )[0]
-    
-  case method
+
+  request =~ /^(.+?) /
+  case $1
     when "GET"
       HandleGET(request)
     when "POST"
@@ -38,6 +37,7 @@ end
 
 def HandleGET(request)
   request_lines = request.split("\r\n")
+
   uri = request_lines[0].split( )[1]
 
   if uri =~ /\.\.\//
@@ -46,33 +46,47 @@ def HandleGET(request)
   end
 
   uri = "/index.html" if uri == "/"
+  uri = $1 if uri =~ /(.+?)\?/
 
   file = "#{WEBROOT}#{uri}"
   puts "File: #{file}"
 
   if ! File.exist?(file)
     puts "OMG YOU HAZ FAIL"
-    #send 404
+    SendString("HTTP/1.1 404 Not Found\r\n\r\n")
     return
   end
 
-  if uri =~ /\.html$/
+  if uri =~ /html$/
     content_type="text/html"
-  elsif uri =~ /\.js$/
+  elsif uri =~ /js$/
    content_type="text/javascript"
-  elsif uri =~ /\.css$/
+  elsif uri =~ /css$/
     content_type="text/css"
-  elsif uri =~ /\.png$/
+  elsif uri =~ /xml$/
+    content_type="text/xml"
+  elsif uri =~ /png$/
     content_type="image/png"
-  elsif uri =~ /\.jpg$/
+  elsif uri =~ /jpg$/
     content_type="image/jpeg"
+  elsif uri =~ /ico$/
+    content_type="image/x-icon"
   end
 
   content_length = File.size(file)
 
-  SendString("HTTP/1.0 200 OK\r\n")
+  mtime = File::mtime(file)
+  mtime = mtime.utc()
+
+  time = Time.new()
+  time = time.utc()
+
+  SendString("HTTP/1.1 200 OK\r\n")
   SendString("Content-Type: #{content_type}\r\n")
+  SendString("Accept-Ranges: bytes\r\n")
+  SendString("Last-Modified: #{mtime.strftime("%a, %d %b %Y %H:%M:%S GMT")}\r\n")
   SendString("Content-Lenght: #{content_length}\r\n")
+  SendString("Date: #{time.strftime("%a, %d %b %Y %H:%M:%S GMT")}\r\n")
   SendString("Server: foohttpd/0.01-a\r\n\r\n")
 
   page = File.open(file, File::RDONLY) 
