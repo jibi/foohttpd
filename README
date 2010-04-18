@@ -1,0 +1,9 @@
+foohttpd - A silly webserver.
+
+- It uses EventMachine
+- It will never offer complete support to the http protocol
+- Some features will be remove soon
+
+This is a really tiny webserver. 
+For now it's just an experiment (just playing with ruby).
+
