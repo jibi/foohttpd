@@ -19,19 +19,14 @@
 
 WEBROOT="/home/blawl/doc/project/foohttpd/htdocs"
 
-def SendString(str)
-  len = str.length
-  EventMachine::send_data @signature, str, len
-end
-
 def HandleHTTP(request)
-
   request =~ /^(.+?) /
+  print "  -> #{$1} "
   case $1
     when "GET"
       HandleGET(request)
     when "POST"
-     #HandlePost(request)
+      #HandlePOST(request)
   end
 end
 
@@ -49,11 +44,11 @@ def HandleGET(request)
   uri = $1 if uri =~ /(.+?)\?/
 
   file = "#{WEBROOT}#{uri}"
-  puts "File: #{file}"
+  puts "#{file}"
 
   if ! File.exist?(file)
     puts "OMG YOU HAZ FAIL"
-    SendString("HTTP/1.1 404 Not Found\r\n\r\n")
+    send_data "HTTP/1.1 404 Not Found\r\n\r\n"
     return
   end
 
@@ -81,16 +76,19 @@ def HandleGET(request)
   time = Time.new()
   time = time.utc()
 
-  SendString("HTTP/1.1 200 OK\r\n")
-  SendString("Content-Type: #{content_type}\r\n")
-  SendString("Accept-Ranges: bytes\r\n")
-  SendString("Last-Modified: #{mtime.strftime("%a, %d %b %Y %H:%M:%S GMT")}\r\n")
-  SendString("Content-Lenght: #{content_length}\r\n")
-  SendString("Date: #{time.strftime("%a, %d %b %Y %H:%M:%S GMT")}\r\n")
-  SendString("Server: foohttpd/0.01-a\r\n\r\n")
-
   page = File.open(file, File::RDONLY) 
-  page.readlines.each { |line| SendString(line) }
+
+  response=""
+  response += "HTTP/1.1 200 OK\r\n"
+  response += "Content-Type: #{content_type}\r\n"
+  response += "Accept-Ranges: bytes\r\n"
+  response += "Last-Modified: #{mtime.strftime("%a, %d %b %Y %H:%M:%S GMT")}\r\n"
+  response += "Content-Lenght: #{content_length}\r\n"
+  response += "Date: #{time.strftime("%a, %d %b %Y %H:%M:%S GMT")}\r\n"
+  response += "Server: foohttpd\r\n\r\n"
+
+  page.readlines.each { |line| response+=line }
+
+  send_data response
   
 end
-

@@ -17,23 +17,26 @@
 #
 
 require 'eventmachine'
+require 'socket'
 require 'request.rb'
 
 class Foohttp
-  module EvMaDesc 
+  class Conn < EventMachine::Connection
     def post_init
-    #  puts "Recived connection"
+      address = Socket.unpack_sockaddr_in(get_peername)[1]
+      puts "Recived request from #{address}"
     end
     def receive_data request
       HandleHTTP(request)
-      #close_connection
+      close_connection_after_writing
     end
   end
 
   def initialize(address, port)
-    puts "Starting foohttpd webserver, listening on #{address}:#{port}"
-    EventMachine::run {
-      EventMachine::start_server address,port, EvMaDesc 
+    puts "Starting foohttpd webserver =^_^="
+    puts "Listening on #{address}:#{port}"
+    EventMachine.run {
+      EventMachine.start_server(address,port,Conn)
     }
   end
 end
